@@ -1,0 +1,15 @@
+.validation-page { padding: var(--space-md) var(--space-lg); max-width: 700px; margin: 0 auto; }
+.validation-page__header { margin-bottom: var(--space-xl); }
+.validation-page__header h1 { font-size: var(--font-2xl); font-weight: 800; margin-bottom: 4px; }
+.validation-page__header p { color: var(--text-muted); font-size: var(--font-sm); }
+.validation-page__success {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-md);
+  padding: var(--space-2xl); text-align: center; animation: scaleIn 0.3s ease;
+}
+.validation-page__success-icon {
+  width: 80px; height: 80px; border-radius: var(--radius-full);
+  background: rgba(52, 211, 153, 0.15); color: var(--accent-green);
+  display: flex; align-items: center; justify-content: center;
+}
+.validation-page__success h2 { font-size: var(--font-xl); font-weight: 700; }
+.validation-page__success p { color: var(--text-muted); font-size: var(--font-sm); }

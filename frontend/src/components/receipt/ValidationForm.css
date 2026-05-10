@@ -1,0 +1,58 @@
+.validation-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.validation-form__confidence {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  font-weight: 500;
+}
+.validation-form__confidence--high { color: var(--accent-green); }
+.validation-form__confidence--medium { color: var(--accent-amber); }
+.validation-form__confidence--low { color: var(--accent-red); }
+
+.validation-form__items { display: flex; flex-direction: column; gap: var(--space-md); }
+
+.validation-form__item {
+  background: var(--bg-surface);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  animation: fadeIn 0.3s ease;
+}
+
+.validation-form__item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.validation-form__item-number { font-size: var(--font-sm); font-weight: 600; color: var(--accent-cyan); }
+
+.validation-form__item-remove {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-disabled); cursor: pointer; transition: all var(--transition-fast);
+}
+.validation-form__item-remove:hover { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); }
+
+.validation-form__item-fields { display: grid; grid-template-columns: 1fr; gap: var(--space-sm); }
+@media (min-width: 768px) { .validation-form__item-fields { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+
+.validation-form__total {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-md) var(--space-lg); background: var(--bg-surface);
+  border-radius: var(--radius-md); border: 1px solid rgba(51, 65, 85, 0.5);
+}
+.validation-form__total-label { font-size: var(--font-base); font-weight: 600; color: var(--text-muted); }
+.validation-form__total-value { font-size: var(--font-2xl); font-weight: 800; }
+.validation-form__total--mismatch { border-color: rgba(248, 113, 113, 0.5); }
+.validation-form__mismatch-warning { font-size: var(--font-xs); color: var(--accent-red); margin-top: var(--space-xs); }
+
+.validation-form__actions { display: flex; gap: var(--space-sm); }
+@media (max-width: 767px) { .validation-form__actions { flex-direction: column; } }
