@@ -28,7 +28,7 @@ TestingSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def apply_migrations() -> Generator[None, None, None]:
     """Apply Alembic migrations to the test database before tests, then tear down."""
     # We must use synchronous psycopg2 for Alembic if it uses sync connections,

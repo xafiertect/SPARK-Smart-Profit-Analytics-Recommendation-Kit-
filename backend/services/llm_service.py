@@ -25,6 +25,8 @@ Rules:
 - Never make up numbers. If you don't have the data, say so.
 - Be concise. Max 3-4 sentences per answer.
 - Write in Bahasa Indonesia unless the user writes in English.
+- If the user asks about profit, revenue, expenses, stock, or trends — calculate and explain based on the data.
+- If the user's question is unrelated to business data, politely redirect them.
 
 Business Context:
 {business_context}
@@ -81,18 +83,44 @@ def _get_client() -> genai.Client:
     return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-async def _call_gemini(prompt: str) -> str:
-    """Call Gemini with timeout. Raises on failure."""
+async def _call_gemini(prompt: str, max_retries: int = 2) -> str:
+    """Call Gemini with timeout and retry on rate limit."""
     client = _get_client()
-    response = await asyncio.wait_for(
-        asyncio.to_thread(
-            client.models.generate_content,
-            model=settings.GEMINI_MODEL,
-            contents=prompt,
-        ),
-        timeout=settings.LLM_TIMEOUT_SECONDS,
-    )
-    return response.text.strip()
+    last_error = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    client.models.generate_content,
+                    model=settings.GEMINI_MODEL,
+                    contents=prompt,
+                ),
+                timeout=settings.LLM_TIMEOUT_SECONDS,
+            )
+            return response.text.strip()
+        except asyncio.TimeoutError:
+            logger.warning("Gemini call timed out (attempt %d/%d)", attempt + 1, max_retries + 1)
+            last_error = "timeout"
+            break  # Don't retry on timeout
+        except Exception as e:
+            error_str = str(e)
+            last_error = error_str
+            # Retry on rate limit (429)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                wait_time = min(5 * (attempt + 1), 15)
+                logger.warning(
+                    "Gemini rate limited (attempt %d/%d), waiting %ds...",
+                    attempt + 1, max_retries + 1, wait_time
+                )
+                if attempt < max_retries:
+                    await asyncio.sleep(wait_time)
+                    continue
+            # Don't retry on other errors
+            logger.error("Gemini error (attempt %d/%d): %s", attempt + 1, max_retries + 1, e)
+            break
+
+    raise Exception(f"Gemini failed after retries: {last_error}")
 
 
 # ── Public API ──────────────────────────────────────────────────────
@@ -100,10 +128,10 @@ async def _call_gemini(prompt: str) -> str:
 async def chat_with_context(message: str, business_context: dict) -> str:
     """AI consultant chat — answers user questions about their business."""
     if not settings.GEMINI_API_KEY:
-        return _fallback_chat(message)
+        return _fallback_chat(message, business_context)
 
     try:
-        ctx_str = json.dumps(business_context, default=str, ensure_ascii=False)
+        ctx_str = _format_context_readable(business_context)
         system = CONSULTANT_SYSTEM_PROMPT.format(business_context=ctx_str)
         full_prompt = f"{system}\n\nUser: {message}\nSPARK:"
         return await _call_gemini(full_prompt)
@@ -112,7 +140,7 @@ async def chat_with_context(message: str, business_context: dict) -> str:
         return "Maaf, saya butuh waktu lebih lama. Coba lagi dalam beberapa detik ya! ⏳"
     except Exception as e:
         logger.error(f"Gemini chat error: {e}")
-        return _fallback_chat(message)
+        return _fallback_chat(message, business_context)
 
 
 async def generate_explanation(
@@ -162,23 +190,117 @@ async def correct_ocr_text(
         return None
 
 
+# ── Context Formatter ───────────────────────────────────────────────
+
+def _format_context_readable(ctx: dict) -> str:
+    """Format business context as human-readable text for better LLM understanding."""
+    lines = []
+
+    # Products
+    products = ctx.get("products", [])
+    if products:
+        lines.append("=== Daftar Produk ===")
+        for p in products:
+            stock = p.get("current_stock", 0)
+            name = p.get("name", "?")
+            sell = p.get("sell_price", 0)
+            threshold = p.get("min_stock_threshold", 0)
+            status = "⚠️ STOK RENDAH" if stock <= threshold else "✅"
+            lines.append(f"- {name}: stok={stock}, harga jual=Rp{sell:,.0f} {status}")
+    else:
+        lines.append("Belum ada produk terdaftar.")
+
+    # Sales averages
+    daily_avg = ctx.get("daily_sales_avg", {})
+    if daily_avg:
+        lines.append("\n=== Rata-rata Penjualan Harian (7 hari) ===")
+        for name, avg in daily_avg.items():
+            lines.append(f"- {name}: {avg:.1f} unit/hari")
+
+    # Weekly expense comparison
+    this_week = ctx.get("this_week_expense", 0)
+    last_week = ctx.get("last_week_expense", 0)
+    lines.append(f"\n=== Pengeluaran ===")
+    lines.append(f"- Minggu ini: Rp{this_week:,.0f}")
+    lines.append(f"- Minggu lalu: Rp{last_week:,.0f}")
+    if last_week > 0:
+        change = ((this_week - last_week) / last_week) * 100
+        direction = "naik" if change > 0 else "turun"
+        lines.append(f"- Perubahan: {direction} {abs(change):.0f}%")
+
+    # Stock levels
+    stock_levels = ctx.get("stock_levels", {})
+    if stock_levels:
+        lines.append(f"\n=== Level Stok ===")
+        for name, level in stock_levels.items():
+            lines.append(f"- {name}: {level}")
+
+    return "\n".join(lines)
+
+
 # ── Fallbacks (when API key missing or LLM fails) ──────────────────
 
-def _fallback_chat(message: str) -> str:
+def _fallback_chat(message: str, business_context: dict = None) -> str:
+    """Smart fallback using actual business data when LLM is unavailable."""
     msg = message.lower()
-    if "keuntungan" in msg or "profit" in msg:
+    ctx = business_context or {}
+
+    products = ctx.get("products", [])
+    this_week_expense = ctx.get("this_week_expense", 0)
+    last_week_expense = ctx.get("last_week_expense", 0)
+    daily_avg = ctx.get("daily_sales_avg", {})
+
+    if "keuntungan" in msg or "profit" in msg or "untung" in msg or "rugi" in msg:
+        if this_week_expense > 0:
+            return (
+                f"Minggu ini pengeluaranmu sebesar Rp{this_week_expense:,.0f}. "
+                f"Untuk melihat detail keuntungan, cek Dashboard ya! 💪"
+            )
+        return "Belum ada data transaksi minggu ini. Mulai catat transaksi untuk melihat keuntungan! 📝"
+
+    if "stok" in msg or "stock" in msg or "habis" in msg:
+        low_stock = [p for p in products if p.get("current_stock", 0) <= p.get("min_stock_threshold", 0)]
+        if low_stock:
+            names = ", ".join([p["name"] for p in low_stock[:3]])
+            return f"⚠️ Produk dengan stok rendah: {names}. Segera restock supaya tidak kehabisan!"
+        if products:
+            return "Semua stok produkmu aman saat ini. Bagus! ✅"
+        return "Belum ada produk terdaftar. Tambahkan produk dulu di halaman Produk."
+
+    if "laris" in msg or "terjual" in msg or "penjualan" in msg or "tren" in msg:
+        if daily_avg:
+            sorted_sales = sorted(daily_avg.items(), key=lambda x: x[1], reverse=True)
+            top = sorted_sales[0]
+            return f"Produk paling laris: {top[0]} dengan rata-rata {top[1]:.1f} unit/hari (7 hari terakhir). 🔥"
+        return "Belum ada data penjualan. Catat transaksi pertamamu untuk melihat tren!"
+
+    if "pengeluaran" in msg or "belanja" in msg or "expense" in msg:
+        if this_week_expense > 0:
+            diff_text = ""
+            if last_week_expense > 0:
+                change = ((this_week_expense - last_week_expense) / last_week_expense) * 100
+                direction = "naik" if change > 0 else "turun"
+                diff_text = f" ({direction} {abs(change):.0f}% dari minggu lalu)"
+            return f"Pengeluaran minggu ini: Rp{this_week_expense:,.0f}{diff_text}."
+        return "Belum ada data pengeluaran minggu ini."
+
+    if "produk" in msg:
+        if products:
+            names = ", ".join([p["name"] for p in products[:5]])
+            return f"Kamu punya {len(products)} produk terdaftar: {names}{'...' if len(products) > 5 else ''}."
+        return "Belum ada produk terdaftar. Tambahkan di halaman Produk ya!"
+
+    # Generic response with context awareness
+    if products:
         return (
-            "Berdasarkan data transaksi yang tercatat, keuntungan kamu hari ini "
-            "berasal dari selisih harga jual dan beli. Cek dashboard ya! 💪"
-        )
-    if "stok" in msg or "stock" in msg:
-        return (
-            "Ada beberapa produk yang stoknya menipis. "
-            "Cek halaman Produk untuk detail lengkapnya."
+            f"Saat ini kamu punya {len(products)} produk terdaftar. "
+            f"Tanyakan tentang stok, keuntungan, pengeluaran, atau tren penjualan "
+            f"dan saya akan bantu analisis berdasarkan datamu! 😊"
         )
     return (
-        "Terima kasih pertanyaannya! Coba tanyakan tentang "
-        "keuntungan, stok, atau tren penjualan ya! 😊"
+        "Halo! Saya SPARK AI, asisten bisnismu. "
+        "Mulai dengan menambahkan produk, lalu catat transaksi. "
+        "Setelah itu saya bisa bantu analisis bisnis kamu! 🚀"
     )
 
 
