@@ -2,6 +2,10 @@
 
 SPARK adalah asisten finansial otomatis untuk UMKM di Indonesia, dilengkapi dengan fitur OCR nota, analisis AI, dan pencatatan stok otomatis.
 
+📚 **Dokumentasi Lengkap (SRS & Cara Kerja Detil)**:
+- [Frontend README](frontend/README.md)
+- [Backend README](backend/README.md)
+
 ## 📋 Persyaratan Sistem
 
 Pastikan kamu sudah menginstal:
@@ -308,6 +312,41 @@ spark2/
 | GET | `/api/v1/agent/insights` | Lihat AI insights |
 | POST | `/api/v1/agent/insights/generate` | Generate AI insights baru |
 | POST | `/api/v1/agent/chat` | Chat dengan AI consultant |
+
+---
+
+## 🔄 Alur Kerja Keseluruhan (System Workflow)
+
+Sistem SPARK memiliki alur kerja utama sebagai berikut:
+
+1. **Inisialisasi Katalog**: Pengguna (UMKM) mendaftarkan produk dasar beserta harga beli, harga jual, dan stok awal.
+2. **Pencatatan Transaksi**: Pengguna dapat menambahkan transaksi secara manual, atau menggunakan kamera/unggahan file untuk **Scan Nota**.
+3. **Ekstraksi OCR & AI Parsing**: Gambar nota dikirim ke backend, diproses oleh model Gemini Vision (AI) untuk mengekstrak barang, jumlah, dan harga menjadi JSON terstruktur.
+4. **Validasi Klien (Human-in-the-Loop)**: AI mengembalikan hasil ekstraksi ke antarmuka aplikasi. Pengguna dapat mengedit/mengoreksi sebelum menyimpannya ke *Database*.
+5. **Pembaruan Kalkulasi (Financial Engine)**: Saat transaksi disimpan, sistem melakukan kalkulasi deterministik: pendapatan, pengeluaran, laba bersih, serta memperbarui jumlah stok terkait secara real-time.
+6. **Pemantauan Cerdas (AI Agent)**: Sistem (AI Agent) secara otomatis mendeteksi kondisi khusus seperti *stok rendah* atau *pengeluaran melonjak*. Saat pemicu ini aktif, backend memanggil LLM untuk merangkum penjelasannya ke dalam wawasan (*Insight*) bagi pengguna.
+7. **Konsultasi Interaktif**: Pengguna berinteraksi dengan AI Consultant Chat menggunakan konteks bisnis secara utuh (data riwayat transaksi & wawasan) guna mendapatkan rekomendasi yang praktis dan relevan.
+
+---
+
+## 📋 Software Requirements Specification (SRS) - Keseluruhan Sistem
+
+### 1. Kebutuhan Fungsional (Functional Requirements)
+- **Modul Pengguna**: Pendaftaran, Login, dan manajemen profil pengguna terisolasi.
+- **Modul Inventaris**: *Create, Read, Update, Soft-Delete* (CRUD) produk dan manajemen stok yang akan otomatis terpotong saat terjadi transaksi penjualan.
+- **Modul Transaksi**: Mendukung input pendapatan dan pengeluaran baik secara manual maupun menggunakan pemindaian optik (OCR) didukung AI.
+- **Modul Kecerdasan Buatan (AI)**:
+  - Ekstraksi informasi nota.
+  - Pemicu otomatis (AI Insights) untuk merekomendasikan restock dan penghematan.
+  - Chat interaktif khusus konteks bisnis pengguna.
+
+### 2. Kebutuhan Non-Fungsional (Non-Functional Requirements)
+- **Keamanan (Security)**: Data di basis data dilindungi menggunakan Row-Level Security (RLS) PostgreSQL untuk mencegah kebocoran antar akun. Akses menggunakan standar JWT.
+- **Performa (Performance)**:
+  - Waktu muat awal (FCP) antarmuka maksimal 2 detik.
+  - Respons OCR/AI dibatasi maksimal 15 detik sebelum mekanisme *fallback* manual diaktifkan.
+- **Keandalan (Reliability)**: Operasi perhitungan kas dan stok (*Financial Engine*) sepenuhnya deterministik, sehingga perhitungan dijamin stabil dan konsisten.
+- **Antarmuka Pengguna (Usability)**: Desain *Mobile-First* berkonsep UI Antigravity dengan target audiens pemilik UMKM awam (tanpa jargon teknis dan tombol mudah diakses).
 
 ---
 

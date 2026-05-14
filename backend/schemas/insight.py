@@ -15,8 +15,14 @@ class InsightOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
 class ChatIn(BaseModel):
     message: str
+    history: list[ChatMessage] | None = None
 
 
 class ChatOut(BaseModel):

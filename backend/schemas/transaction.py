@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
+from typing import Literal
 
 
 class TransactionItemIn(BaseModel):
@@ -9,6 +10,22 @@ class TransactionItemIn(BaseModel):
     quantity: float
     unit_price: float
     subtotal: float | None = None
+
+
+class ParsedReceiptItem(BaseModel):
+    product_name: str
+    quantity: float
+    unit_price: float
+    subtotal: float | None = None
+
+
+class ParsedReceipt(BaseModel):
+    transaction_date: date | str | None
+    items: list[ParsedReceiptItem]
+    total_amount: float | None
+    confidence: Literal["high", "medium", "low"]
+    raw_text: str | None = None
+
 
 
 class TransactionCreateIn(BaseModel):

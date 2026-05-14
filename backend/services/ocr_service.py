@@ -7,10 +7,12 @@ import asyncio
 import json
 import logging
 
-from google import genai
-from google.genai import types
+from google import genai  # type: ignore
+from google.genai import types  # type: ignore
+from pydantic import ValidationError
 
 from core.config import settings
+from schemas.transaction import ParsedReceipt
 
 logger = logging.getLogger(__name__)
 
@@ -86,16 +88,17 @@ async def extract_text_from_image(
         if raw_text.startswith("```"):
             raw_text = raw_text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        parsed = json.loads(raw_text)
-        parsed["raw_text"] = raw_text
-        return parsed
+        parsed_dict = json.loads(raw_text)
+        parsed_dict["raw_text"] = raw_text
+        parsed = ParsedReceipt(**parsed_dict)
+        return parsed.model_dump()
 
     except asyncio.TimeoutError:
         logger.error("Gemini OCR timed out")
         return _empty_result("OCR timed out — please fill manually")
-    except json.JSONDecodeError as e:
-        logger.error(f"Gemini returned invalid JSON: {e}")
-        return _empty_result("Could not parse receipt — please fill manually")
+    except (json.JSONDecodeError, ValidationError) as e:
+        logger.error(f"Gemini returned invalid JSON or format: {e}")
+        return _empty_result("Could not parse receipt format — please fill manually")
     except Exception as e:
         logger.error(f"Gemini OCR error: {e}")
         return _empty_result(str(e))

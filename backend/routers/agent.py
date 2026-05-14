@@ -1,5 +1,8 @@
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends
+# pyrefly: ignore [missing-import]
 from sqlalchemy import select
+# pyrefly: ignore [missing-import]
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -45,5 +48,6 @@ async def chat(
     db: AsyncSession = Depends(get_db),
 ):
     context = await get_business_context(current_user.id, db)
-    reply = await chat_with_context(data.message, context.__dict__)
+    history_dicts = [h.model_dump() for h in data.history] if data.history else None
+    reply = await chat_with_context(data.message, context.__dict__, history_dicts)
     return ChatOut(reply=reply)

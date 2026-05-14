@@ -58,16 +58,17 @@ export default function Validation() {
     setError(null);
     try {
       // Map back to API snake_case format
+      const today = new Date().toISOString().split('T')[0];
       await confirmTransaction({
         transaction_type: data.type || 'sale',
-        transaction_date: data.transactionDate,
+        transaction_date: data.transactionDate || today,
         source: 'ocr',
         notes: 'Dari scan nota',
         items: data.items.map((item) => ({
-          product_name: item.productName,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.unitPrice),
-          subtotal: Number(item.subtotal) || Number(item.quantity) * Number(item.unitPrice),
+          product_name: item.productName || 'Item Tidak Bernama',
+          quantity: Number(item.quantity) || 1,
+          unit_price: Number(item.unitPrice) || 0,
+          subtotal: Number(item.subtotal) || (Number(item.quantity || 1) * Number(item.unitPrice || 0)),
         })),
       });
       setSaved(true);

@@ -6,10 +6,13 @@ import asyncio
 import json
 import logging
 
-from google import genai
-from google.genai import types
+
+from google import genai  # type: ignore
+from google.genai import types  # type: ignore
+from pydantic import ValidationError
 
 from core.config import settings
+from schemas.transaction import ParsedReceipt
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +23,12 @@ You are SPARK, a friendly financial assistant for small business owners in Indon
 You help them understand their business data and make smart decisions.
 
 Rules:
-- Always use simple language. No jargon.
-- Always base your answer on the provided business context data.
-- Never make up numbers. If you don't have the data, say so.
-- Be concise. Max 3-4 sentences per answer.
-- Write in Bahasa Indonesia unless the user writes in English.
-- If the user asks about profit, revenue, expenses, stock, or trends — calculate and explain based on the data.
-- If the user's question is unrelated to business data, politely redirect them.
+- Selalu gunakan bahasa yang membumi, sederhana, dan hindari jargon bisnis yang rumit.
+- Jawablah layaknya konsultan manusia: dinamis, tidak kaku (anti-template), empatik, dan berikan dorongan positif sesuai kondisi bisnis pengguna.
+- Gunakan data `BusinessContext` sebagai fondasi utama. Padukan dengan teori bisnis dasar UMKM (seperti tips promosi, cashflow, manajemen stok) jika relevan untuk memperkaya jawaban.
+- Jangan pernah mengarang angka transaksi.
+- Buat jawaban yang interaktif dan memancing diskusi (misal bertanya balik tentang target mereka).
+- Jika pertanyaan di luar konteks bisnis/keuangan, arahkan kembali dengan sopan.
 
 Business Context:
 {business_context}
@@ -125,7 +127,7 @@ async def _call_gemini(prompt: str, max_retries: int = 2) -> str:
 
 # ── Public API ──────────────────────────────────────────────────────
 
-async def chat_with_context(message: str, business_context: dict) -> str:
+async def chat_with_context(message: str, business_context: dict, history: list[dict] | None = None) -> str:
     """AI consultant chat — answers user questions about their business."""
     if not settings.GEMINI_API_KEY:
         return _fallback_chat(message, business_context)
@@ -133,7 +135,15 @@ async def chat_with_context(message: str, business_context: dict) -> str:
     try:
         ctx_str = _format_context_readable(business_context)
         system = CONSULTANT_SYSTEM_PROMPT.format(business_context=ctx_str)
-        full_prompt = f"{system}\n\nUser: {message}\nSPARK:"
+        
+        full_prompt = f"{system}\n\n"
+        if history:
+            for h in history:
+                role = "User" if h.get("role") == "user" else "SPARK"
+                full_prompt += f"{role}: {h.get('content', '')}\n"
+                
+        full_prompt += f"User: {message}\nSPARK:"
+        
         return await _call_gemini(full_prompt)
     except asyncio.TimeoutError:
         logger.error("Gemini chat timed out")
@@ -184,7 +194,12 @@ async def correct_ocr_text(
         if raw_response.startswith("```"):
             raw_response = raw_response.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        return json.loads(raw_response)
+        parsed_dict = json.loads(raw_response)
+        parsed = ParsedReceipt(**parsed_dict)
+        return parsed.model_dump()
+    except (json.JSONDecodeError, ValidationError) as e:
+        logger.error(f"Gemini OCR correction validation error: {e}")
+        return None
     except Exception as e:
         logger.error(f"Gemini OCR correction error: {e}")
         return None
