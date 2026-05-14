@@ -1,6 +1,7 @@
 """
 LLM service powered by Google Gemini.
 Handles: receipt text correction, AI consultant chat, agent explanations.
+Integrates RAG knowledge base for broader business consulting.
 """
 import asyncio
 import json
@@ -13,25 +14,43 @@ from pydantic import ValidationError
 
 from core.config import settings
 from schemas.transaction import ParsedReceipt
+from services.rag_knowledge import get_rag_knowledge_for_query
 
 logger = logging.getLogger(__name__)
 
 # ── Prompt templates ────────────────────────────────────────────────
 
 CONSULTANT_SYSTEM_PROMPT = """
-You are SPARK, a friendly financial assistant for small business owners in Indonesia.
-You help them understand their business data and make smart decisions.
+You are SPARK, a friendly and knowledgeable financial & business consultant for small business owners (UMKM) in Indonesia.
+You help them understand their business data, make smart decisions, and grow their business.
 
-Rules:
+## Your Capabilities
+You can answer questions about:
+- Keuangan: cash flow, profit, margin, pengeluaran, modal, utang
+- Marketing: strategi promosi, branding, digital marketing, social media
+- Penjualan: meningkatkan omzet, upselling, cross-selling, layanan pelanggan
+- Stok & Inventory: manajemen stok, supplier, reorder point
+- Operasional: efisiensi, SOP, manajemen karyawan
+- Pengembangan Bisnis: scaling, ekspansi, legalitas, perizinan
+- Tips Umum: motivasi, mindset pengusaha, best practices UMKM
+
+## Rules
 - Selalu gunakan bahasa yang membumi, sederhana, dan hindari jargon bisnis yang rumit.
 - Jawablah layaknya konsultan manusia: dinamis, tidak kaku (anti-template), empatik, dan berikan dorongan positif sesuai kondisi bisnis pengguna.
-- Gunakan data `BusinessContext` sebagai fondasi utama. Padukan dengan teori bisnis dasar UMKM (seperti tips promosi, cashflow, manajemen stok) jika relevan untuk memperkaya jawaban.
-- Jangan pernah mengarang angka transaksi.
+- Gunakan data `Business Context` sebagai fondasi utama untuk pertanyaan yang berkaitan dengan data bisnis pengguna.
+- Gunakan `Knowledge Base` untuk memperkaya jawaban dengan tips dan strategi bisnis yang relevan.
+- Padukan kedua sumber informasi ini untuk memberikan saran yang actionable dan kontekstual.
+- Jangan pernah mengarang angka transaksi atau data bisnis yang tidak ada di Business Context.
 - Buat jawaban yang interaktif dan memancing diskusi (misal bertanya balik tentang target mereka).
-- Jika pertanyaan di luar konteks bisnis/keuangan, arahkan kembali dengan sopan.
+- Jika pertanyaan sangat di luar konteks bisnis/keuangan (misal: resep masakan, politik), arahkan kembali dengan sopan.
+- Jawaban maksimal 4-6 kalimat, kecuali user meminta penjelasan lebih detail.
+- Tulis dalam Bahasa Indonesia kecuali user menulis dalam bahasa lain.
 
-Business Context:
+## Business Context (Data Nyata Pengguna)
 {business_context}
+
+## Knowledge Base (Pengetahuan Bisnis Umum)
+{rag_knowledge}
 """
 
 AGENT_EXPLANATION_PROMPT = """
@@ -128,13 +147,21 @@ async def _call_gemini(prompt: str, max_retries: int = 2) -> str:
 # ── Public API ──────────────────────────────────────────────────────
 
 async def chat_with_context(message: str, business_context: dict, history: list[dict] | None = None) -> str:
-    """AI consultant chat — answers user questions about their business."""
+    """AI consultant chat — answers user questions about their business.
+    Integrates RAG knowledge base for broader business topics."""
     if not settings.GEMINI_API_KEY:
         return _fallback_chat(message, business_context)
 
     try:
         ctx_str = _format_context_readable(business_context)
-        system = CONSULTANT_SYSTEM_PROMPT.format(business_context=ctx_str)
+
+        # RAG: retrieve relevant knowledge based on the user's question
+        rag_knowledge = get_rag_knowledge_for_query(message, top_k=3)
+
+        system = CONSULTANT_SYSTEM_PROMPT.format(
+            business_context=ctx_str,
+            rag_knowledge=rag_knowledge if rag_knowledge else "(Tidak ada knowledge base yang relevan untuk pertanyaan ini)"
+        )
         
         full_prompt = f"{system}\n\n"
         if history:
@@ -256,7 +283,7 @@ def _format_context_readable(ctx: dict) -> str:
 # ── Fallbacks (when API key missing or LLM fails) ──────────────────
 
 def _fallback_chat(message: str, business_context: dict = None) -> str:
-    """Smart fallback using actual business data when LLM is unavailable."""
+    """Smart fallback using actual business data + RAG knowledge when LLM is unavailable."""
     msg = message.lower()
     ctx = business_context or {}
 
@@ -265,6 +292,7 @@ def _fallback_chat(message: str, business_context: dict = None) -> str:
     last_week_expense = ctx.get("last_week_expense", 0)
     daily_avg = ctx.get("daily_sales_avg", {})
 
+    # Business data questions — use actual data
     if "keuntungan" in msg or "profit" in msg or "untung" in msg or "rugi" in msg:
         if this_week_expense > 0:
             return (
@@ -305,17 +333,27 @@ def _fallback_chat(message: str, business_context: dict = None) -> str:
             return f"Kamu punya {len(products)} produk terdaftar: {names}{'...' if len(products) > 5 else ''}."
         return "Belum ada produk terdaftar. Tambahkan di halaman Produk ya!"
 
+    # Business knowledge questions — use RAG fallback
+    rag_knowledge = get_rag_knowledge_for_query(message, top_k=1)
+    if rag_knowledge:
+        return (
+            f"Saat ini koneksi AI sedang terganggu, tapi berikut tips yang relevan:\n\n"
+            f"{rag_knowledge}\n\n"
+            f"Untuk jawaban yang lebih spesifik tentang bisnismu, coba tanya lagi nanti ya! 😊"
+        )
+
     # Generic response with context awareness
     if products:
         return (
             f"Saat ini kamu punya {len(products)} produk terdaftar. "
-            f"Tanyakan tentang stok, keuntungan, pengeluaran, atau tren penjualan "
-            f"dan saya akan bantu analisis berdasarkan datamu! 😊"
+            f"Tanyakan tentang stok, keuntungan, pengeluaran, strategi marketing, "
+            f"tips penjualan, atau tren penjualan dan saya akan bantu analisis! 😊"
         )
     return (
-        "Halo! Saya SPARK AI, asisten bisnismu. "
-        "Mulai dengan menambahkan produk, lalu catat transaksi. "
-        "Setelah itu saya bisa bantu analisis bisnis kamu! 🚀"
+        "Halo! Saya SPARK AI, asisten bisnis kamu. "
+        "Kamu bisa bertanya tentang keuangan, marketing, penjualan, stok, "
+        "dan tips mengembangkan bisnis. Mulai dengan menambahkan produk "
+        "dan mencatat transaksi ya! 🚀"
     )
 
 

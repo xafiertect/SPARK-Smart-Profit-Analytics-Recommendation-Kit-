@@ -7,8 +7,10 @@ import './AiChat.css';
 const SUGGESTIONS = [
   'Berapa keuntungan saya hari ini?',
   'Produk apa yang paling laris?',
+  'Bagaimana cara meningkatkan penjualan?',
+  'Tips marketing untuk bisnis kecil?',
   'Stok mana yang perlu diisi?',
-  'Tren penjualan 7 hari terakhir?',
+  'Cara mengelola cash flow yang baik?',
 ];
 
 export default function AiChat() {
