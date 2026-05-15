@@ -6,16 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.transaction import Transaction
 from models.product import Product
+from models.expense import Expense
 
 
-def _calculate_summary(transactions: list[Transaction]) -> dict:
-    """Pure function to calculate summary from a list of transactions."""
+def _calculate_summary(transactions: list[Transaction], expenses: list[Expense]) -> dict:
+    """Pure function to calculate summary from a list of transactions and expenses."""
     income = sum(float(t.total_amount) for t in transactions if t.transaction_type == "sale")
-    expense = sum(float(t.total_amount) for t in transactions if t.transaction_type == "purchase")
-    profit = income - expense
+    expense_total = sum(float(e.total_actual) for e in expenses if e.status == "confirmed")
+    profit = income - expense_total
     return {
         "income": income,
-        "expense": expense,
+        "expense": expense_total,
         "profit": profit,
     }
 
@@ -24,22 +25,32 @@ async def calculate_daily_summary(
     user_id: UUID, target_date: date, db: AsyncSession
 ) -> dict:
     """Pure rule-based daily financial summary. No AI involved."""
-    stmt = select(Transaction).where(
+    stmt_tx = select(Transaction).where(
         Transaction.user_id == user_id,
         Transaction.transaction_date == target_date,
         Transaction.is_deleted == False,
+        Transaction.transaction_type == "sale"
     )
-    result = await db.execute(stmt)
-    transactions = result.scalars().all()
+    result_tx = await db.execute(stmt_tx)
+    transactions = result_tx.scalars().all()
 
-    summary = _calculate_summary(transactions)
+    stmt_exp = select(Expense).where(
+        Expense.user_id == user_id,
+        Expense.expense_date == target_date,
+        Expense.is_deleted == False,
+        Expense.status == "confirmed"
+    )
+    result_exp = await db.execute(stmt_exp)
+    expenses = result_exp.scalars().all()
+
+    summary = _calculate_summary(transactions, expenses)
 
     return {
         "date": target_date,
         "income": summary["income"],
         "expense": summary["expense"],
         "profit": summary["profit"],
-        "transaction_count": len(transactions),
+        "transaction_count": len(transactions) + len(expenses),
     }
 
 
@@ -48,16 +59,27 @@ async def calculate_weekly_summary(
 ) -> dict:
     """Aggregate 7-day summary."""
     start_date = end_date - timedelta(days=6)
-    stmt = select(Transaction).where(
+    stmt_tx = select(Transaction).where(
         Transaction.user_id == user_id,
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date <= end_date,
         Transaction.is_deleted == False,
+        Transaction.transaction_type == "sale"
     )
-    result = await db.execute(stmt)
-    transactions = result.scalars().all()
+    result_tx = await db.execute(stmt_tx)
+    transactions = result_tx.scalars().all()
 
-    summary = _calculate_summary(transactions)
+    stmt_exp = select(Expense).where(
+        Expense.user_id == user_id,
+        Expense.expense_date >= start_date,
+        Expense.expense_date <= end_date,
+        Expense.is_deleted == False,
+        Expense.status == "confirmed"
+    )
+    result_exp = await db.execute(stmt_exp)
+    expenses = result_exp.scalars().all()
+
+    summary = _calculate_summary(transactions, expenses)
 
     return {
         "start_date": start_date,
@@ -65,7 +87,7 @@ async def calculate_weekly_summary(
         "income": summary["income"],
         "expense": summary["expense"],
         "profit": summary["profit"],
-        "transaction_count": len(transactions),
+        "transaction_count": len(transactions) + len(expenses),
     }
 
 

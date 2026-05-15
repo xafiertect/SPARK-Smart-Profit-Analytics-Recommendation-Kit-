@@ -57,10 +57,12 @@ async def create_transaction(
         ))
         total += subtotal
 
+    final_total = data.total_amount if data.total_amount is not None else total
+
     txn = Transaction(
         user_id=current_user.id,
         transaction_type=data.transaction_type,
-        total_amount=total,
+        total_amount=final_total,
         source=data.source,
         transaction_date=data.transaction_date,
         notes=data.notes,
@@ -74,6 +76,40 @@ async def create_transaction(
             current_user.id, item_data.product_name,
             item_data.quantity, data.transaction_type, db,
         )
+
+    # RULE E-1 — Auto-create draft expense on purchase
+    if data.transaction_type == "purchase":
+        from models.expense import Expense
+        from models.product import Product as ProductModel
+
+        for item_data in data.items:
+            # Lookup product for base_price snapshot
+            prod_result = await db.execute(
+                select(ProductModel).where(
+                    ProductModel.user_id == current_user.id,
+                    ProductModel.name == item_data.product_name,
+                    ProductModel.is_deleted == False,
+                )
+            )
+            prod = prod_result.scalar_one_or_none()
+            unit_price = float(item_data.unit_price)
+            subtotal = item_data.subtotal or (item_data.quantity * unit_price)
+
+            expense = Expense(
+                user_id=current_user.id,
+                name=f"Pembelian Stok: {item_data.product_name}",
+                expense_date=data.transaction_date,
+                category="Pembelian Stok",
+                related_product_id=prod.id if prod else None,
+                related_product_name=item_data.product_name,
+                stock_quantity=item_data.quantity,
+                unit_price_snapshot=unit_price,
+                total_default=subtotal,
+                total_actual=subtotal,
+                source="auto-tambah-stok",
+                status="draft",
+            )
+            db.add(expense)
 
     await db.commit()
     await db.refresh(txn, ["items"])

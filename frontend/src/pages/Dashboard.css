@@ -10,7 +10,7 @@
   background: var(--gradient-spark);
   background-size: 200% 200%;
   animation: gradientShift 6s ease infinite;
-  padding: 28px;
+  padding: 20px 24px;
   border-radius: var(--radius-lg);
   color: white;
   box-shadow: var(--glow-cyan);
@@ -44,7 +44,7 @@
 }
 .dashboard__greeting h1 { 
   font-family: var(--font-display); 
-  font-size: 1.5rem; 
+  font-size: 1.25rem; 
   font-weight: 800; 
   margin-bottom: 4px; 
   position: relative; 
@@ -95,6 +95,8 @@
 
 @media (min-width: 768px) { 
   .dashboard__metrics { grid-template-columns: repeat(3, 1fr); } 
+  .dashboard__greeting { padding: 32px; }
+  .dashboard__greeting h1 { font-size: 1.5rem; }
 }
 
 /* Section headers */

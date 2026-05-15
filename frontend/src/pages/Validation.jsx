@@ -57,13 +57,14 @@ export default function Validation() {
     setSaving(true);
     setError(null);
     try {
-      // Map back to API snake_case format
-      const today = new Date().toISOString().split('T')[0];
+      // Get local date in YYYY-MM-DD format
+      const today = new Date().toLocaleDateString('en-CA');
       await confirmTransaction({
         transaction_type: data.type || 'sale',
         transaction_date: data.transactionDate || today,
         source: 'ocr',
         notes: 'Dari scan nota',
+        total_amount: Number(data.totalAmount) || 0,
         items: data.items.map((item) => ({
           product_name: item.productName || 'Item Tidak Bernama',
           quantity: Number(item.quantity) || 1,

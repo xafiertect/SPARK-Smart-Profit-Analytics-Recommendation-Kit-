@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import auth, products, transactions, ocr, agent, dashboard
+from routers import auth, products, transactions, ocr, agent, dashboard, notifications, expenses
 
 app = FastAPI(
     title="SPARK API",
@@ -70,6 +70,8 @@ app.include_router(transactions.router)
 app.include_router(ocr.router)
 app.include_router(agent.router)
 app.include_router(dashboard.router)
+app.include_router(notifications.router)
+app.include_router(expenses.router)
 
 
 @app.get("/health", tags=["system"])

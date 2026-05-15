@@ -7,6 +7,7 @@ import Validation from './pages/Validation';
 import Onboarding from './pages/Onboarding';
 import AiChat from './pages/AiChat';
 import Products from './pages/Products';
+import Expenses from './pages/Expenses';
 import SettingsPage from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/validation" element={<Validation />} />
             <Route path="/chat" element={<AiChat />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ScanLine, MessageCircle, Package, Settings } from 'lucide-react';
+import { LayoutDashboard, ScanLine, MessageCircle, Package, Wallet } from 'lucide-react';
 import './BottomNav.css';
 
 export default function BottomNav() {
@@ -37,21 +37,21 @@ export default function BottomNav() {
         </button>
 
         <NavLink
+          to="/expenses"
+          className={({ isActive }) => `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`}
+          id="nav-expenses"
+        >
+          <Wallet size={22} />
+          <span className="bottom-nav__label">Pengeluaran</span>
+        </NavLink>
+
+        <NavLink
           to="/chat"
           className={({ isActive }) => `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`}
           id="nav-chat"
         >
           <MessageCircle size={22} />
           <span className="bottom-nav__label">AI Chat</span>
-        </NavLink>
-
-        <NavLink
-          to="/settings"
-          className={({ isActive }) => `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`}
-          id="nav-settings"
-        >
-          <Settings size={22} />
-          <span className="bottom-nav__label">Lainnya</span>
         </NavLink>
       </nav>
     </>

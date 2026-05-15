@@ -36,6 +36,27 @@ async def create_product(
     db.add(product)
     await db.commit()
     await db.refresh(product)
+
+    if product.current_stock > 0:
+        from models.expense import Expense
+        from datetime import date
+        expense = Expense(
+            user_id=current_user.id,
+            name=f"Pembelian Stok: {product.name}",
+            expense_date=date.today(),
+            category="Pembelian Stok",
+            related_product_id=product.id,
+            related_product_name=product.name,
+            stock_quantity=product.current_stock,
+            unit_price_snapshot=product.base_price,
+            total_default=product.current_stock * product.base_price,
+            total_actual=product.current_stock * product.base_price,
+            source="auto-tambah-stok",
+            status="draft",
+        )
+        db.add(expense)
+        await db.commit()
+
     return product
 
 
@@ -57,11 +78,35 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Produk tidak ditemukan")
 
+    old_stock = product.current_stock
+
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
 
     await db.commit()
     await db.refresh(product)
+
+    diff = product.current_stock - old_stock
+    if diff > 0:
+        from models.expense import Expense
+        from datetime import date
+        expense = Expense(
+            user_id=current_user.id,
+            name=f"Pembelian Stok: {product.name}",
+            expense_date=date.today(),
+            category="Pembelian Stok",
+            related_product_id=product.id,
+            related_product_name=product.name,
+            stock_quantity=diff,
+            unit_price_snapshot=product.base_price,
+            total_default=diff * product.base_price,
+            total_actual=diff * product.base_price,
+            source="auto-tambah-stok",
+            status="draft",
+        )
+        db.add(expense)
+        await db.commit()
+
     return product
 
 

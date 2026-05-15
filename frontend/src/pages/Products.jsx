@@ -163,12 +163,12 @@ export default function Products() {
         onClose={() => setShowModal(false)}
         title={editingProduct ? '✏️ Edit Produk' : '➕ Tambah Produk Baru'}
         footer={
-          <div className="products-modal__footer">
+          <>
             <Button variant="ghost" onClick={() => setShowModal(false)}>Batal</Button>
             <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving}>
               {editingProduct ? 'Simpan Perubahan' : 'Tambah Produk'}
             </Button>
-          </div>
+          </>
         }
       >
         {error && (
@@ -199,10 +199,10 @@ export default function Products() {
         onClose={() => setConfirmDelete(null)}
         title="🗑️ Hapus Produk?"
         footer={
-          <div className="products-modal__footer">
+          <>
             <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Batal</Button>
             <Button variant="danger" onClick={() => handleDelete(confirmDelete?.id)}>Ya, Hapus</Button>
-          </div>
+          </>
         }
       >
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>

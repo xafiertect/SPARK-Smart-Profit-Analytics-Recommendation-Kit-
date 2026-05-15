@@ -16,10 +16,21 @@ class MockTransaction:
         self.transaction_date = date.today()
         self.items = []
 
-def make_transactions(sales: float, purchases: float) -> list[MockTransaction]:
+class MockExpense:
+    def __init__(self, total_actual: float, status: str = "confirmed"):
+        self.id = uuid.uuid4()
+        self.total_actual = total_actual
+        self.status = status
+        self.expense_date = date.today()
+
+def make_transactions(sales: float) -> list[MockTransaction]:
     transactions = []
     if sales > 0:
         transactions.append(MockTransaction(transaction_type="sale", total_amount=sales))
-    if purchases > 0:
-        transactions.append(MockTransaction(transaction_type="purchase", total_amount=purchases))
     return transactions
+
+def make_expenses(purchases: float) -> list[MockExpense]:
+    expenses = []
+    if purchases > 0:
+        expenses.append(MockExpense(total_actual=purchases))
+    return expenses

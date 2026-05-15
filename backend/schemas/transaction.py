@@ -35,6 +35,7 @@ class TransactionCreateIn(BaseModel):
     transaction_date: date
     notes: str | None = None
     source: str = "manual"
+    total_amount: float | None = None
 
 
 class TransactionItemOut(BaseModel):

@@ -1,7 +1,9 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScanLine, MessageCircle, Package, Settings, Zap, Search, Bell, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, ScanLine, MessageCircle, Package, Settings, Zap, Search, Bell, Sun, Moon, Wallet } from 'lucide-react';
 import useAuthStore from '../../stores/authStore';
+import useNotificationStore from '../../stores/notificationStore';
 import BottomNav from './BottomNav';
+import NotificationPanel from '../ui/NotificationPanel';
 import './AppShell.css';
 import { useState, useEffect } from 'react';
 
@@ -34,11 +36,20 @@ function ThemeToggle() {
 export default function AppShell() {
   const user = useAuthStore((s) => s.user);
   const location = useLocation();
+  const { unreadCount, fetchUnreadCount, togglePanel } = useNotificationStore();
+
+  useEffect(() => {
+    fetchUnreadCount();
+    // Poll every 60s
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/': return 'Dashboard';
       case '/products': return '📦 Produk';
+      case '/expenses': return '💸 Pengeluaran';
       case '/chat': return '💬 AI Chat';
       case '/settings': return '⚙️ Pengaturan';
       case '/scan': return '📸 Scan Nota';
@@ -64,6 +75,9 @@ export default function AppShell() {
           </NavLink>
           <NavLink to="/products" className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
             <Package size={20} /> <span className="sidebar__label">Produk</span>
+          </NavLink>
+          <NavLink to="/expenses" className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
+            <Wallet size={20} /> <span className="sidebar__label">Pengeluaran</span>
           </NavLink>
           <NavLink to="/scan" className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
             <ScanLine size={20} /> <span className="sidebar__label">Scan Nota</span>
@@ -103,9 +117,16 @@ export default function AppShell() {
             </div>
           </div>
           <div className="topbar__right">
-            <button className="topbar__btn relative" aria-label="Notifications">
+            <button
+              className="topbar__btn relative"
+              aria-label="Notifications"
+              onClick={togglePanel}
+              id="btn-notifications"
+            >
               <Bell size={20} />
-              <span className="topbar__notif-badge" />
+              {unreadCount > 0 && (
+                <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
             </button>
             <ThemeToggle />
             <div className="topbar__avatar">
@@ -122,6 +143,9 @@ export default function AppShell() {
 
       {/* Mobile bottom nav */}
       <BottomNav />
+
+      {/* Notification Panel (slide-in) */}
+      <NotificationPanel />
     </div>
   );
 }
