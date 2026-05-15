@@ -17,7 +17,8 @@ class ParsedReceiptItem(BaseModel):
     quantity: float
     unit_price: float
     subtotal: float | None = None
-
+    is_new_product: bool | None = False
+    flag: str | None = None
 
 class ParsedReceipt(BaseModel):
     transaction_date: date | str | None
