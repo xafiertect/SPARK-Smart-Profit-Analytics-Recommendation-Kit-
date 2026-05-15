@@ -28,5 +28,5 @@ async def scan_receipt(
     result = await db.execute(stmt)
     catalog = [row[0] for row in result.all()]
 
-    parsed = await extract_text_from_image(contents, product_catalog=catalog)
+    parsed = await extract_text_from_image(contents, mime_type=file.content_type, product_catalog=catalog)
     return parsed

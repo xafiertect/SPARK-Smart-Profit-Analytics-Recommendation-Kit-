@@ -70,6 +70,7 @@ const useBusinessStore = create((set, get) => ({
   },
 
   triggerInsights: async () => {
+    set({ insightsLoading: true });
     try {
       const result = await generateInsights();
       // Refresh insights list after generation
@@ -77,6 +78,8 @@ const useBusinessStore = create((set, get) => ({
       return result;
     } catch (e) {
       set({ error: e.message });
+    } finally {
+      set({ insightsLoading: false });
     }
   },
 

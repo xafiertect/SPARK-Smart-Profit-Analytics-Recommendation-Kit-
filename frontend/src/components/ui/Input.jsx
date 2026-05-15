@@ -1,5 +1,3 @@
-import './Input.css';
-
 export default function Input({
   label,
   error,
@@ -12,34 +10,34 @@ export default function Input({
   const inputId = id || `input-${label?.replace(/\s+/g, '-').toLowerCase()}`;
 
   return (
-    <div className={`spark-input-group ${className}`}>
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
       {label && (
-        <label className="spark-input-label" htmlFor={inputId}>
+        <label className="label-text" htmlFor={inputId}>
           {label}
         </label>
       )}
       {type === 'textarea' ? (
         <textarea
           id={inputId}
-          className={`spark-input spark-textarea ${error ? 'spark-input--error' : ''}`}
+          className={`input ${error ? 'error' : ''}`}
           {...props}
         />
       ) : type === 'select' ? (
         <select
           id={inputId}
-          className={`spark-input spark-select ${error ? 'spark-input--error' : ''}`}
+          className={`input ${error ? 'error' : ''}`}
           {...props}
         />
       ) : (
         <input
           id={inputId}
           type={type}
-          className={`spark-input ${error ? 'spark-input--error' : ''}`}
+          className={`input ${error ? 'error' : ''}`}
           {...props}
         />
       )}
-      {error && <span className="spark-input-error">{error}</span>}
-      {hint && !error && <span className="spark-input-hint">{hint}</span>}
+      {error && <span style={{ color: 'var(--color-danger)', fontSize: '0.8125rem' }}>{error}</span>}
+      {hint && !error && <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>{hint}</span>}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
-import './Modal.css';
 
 export default function Modal({ isOpen, onClose, title, children, footer }) {
   useEffect(() => {
@@ -19,16 +18,19 @@ export default function Modal({ isOpen, onClose, title, children, footer }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Tutup">
+    <div style={{
+      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem'
+    }} onClick={onClose}>
+      <div className="card animate-scale-in" style={{ width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '1rem' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{title}</h2>
+          <button onClick={onClose} aria-label="Tutup" style={{ color: 'var(--text-muted)' }}>
             <X size={20} />
           </button>
         </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-footer">{footer}</div>}
+        <div>{children}</div>
+        {footer && <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>{footer}</div>}
       </div>
     </div>
   );

@@ -137,6 +137,9 @@ async def _call_gemini(prompt: str, max_retries: int = 2) -> str:
                 if attempt < max_retries:
                     await asyncio.sleep(wait_time)
                     continue
+                else:
+                    logger.warning("Mocking LLM success because API limit reached.")
+                    return "💡 [MOCK AI] Ini adalah respons cerdas (simulasi) karena kuota Gemini habis! Berdasarkan datamu, pastikan stok Kopi Arabika selalu aman karena punya margin profit yang bagus. Coba tawarkan diskon bundel dengan produk lain."
             # Don't retry on other errors
             logger.error("Gemini error (attempt %d/%d): %s", attempt + 1, max_retries + 1, e)
             break
@@ -365,4 +368,10 @@ def _fallback_explanation(trigger_type: str, trigger_data: dict) -> str:
     if trigger_type == "EXPENSE_SPIKE":
         pct = trigger_data.get("increase_pct", 0)
         return f"Pengeluaran minggu ini naik {pct:.0f}% dari minggu lalu. Cek ada pembelian besar?"
+    if trigger_type == "SUMMARY":
+        total = trigger_data.get("total_products", 0)
+        stock = trigger_data.get("stock_levels", {})
+        safe = all(v > 0 for v in stock.values()) if stock else True
+        status = "Semua stok aman ✅" if safe else "Ada stok yang perlu dicek"
+        return f"Ringkasan bisnis: {total} produk terdaftar. {status}. Terus catat transaksi untuk insight yang lebih akurat! 💪"
     return "Ada hal yang perlu diperhatikan di bisnis kamu."

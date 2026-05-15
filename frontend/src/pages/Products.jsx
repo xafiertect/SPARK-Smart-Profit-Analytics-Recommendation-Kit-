@@ -96,7 +96,7 @@ export default function Products() {
   if (productsLoading && products.length === 0) {
     return (
       <div className="products-page">
-        <div style={{ padding: 'var(--space-xl)', color: 'var(--text-muted)', textAlign: 'center' }}>
+        <div style={{ padding: '64px', color: 'var(--text-muted)', textAlign: 'center', animation: 'pulse 2s infinite' }}>
           Memuat produk...
         </div>
       </div>
@@ -104,13 +104,13 @@ export default function Products() {
   }
 
   return (
-    <div className="products-page">
-      <div className="products-page__header animate-fade-in">
+    <div className="products-page animate-fade-in">
+      <div className="products-page__header">
         <h1>📦 Produk</h1>
         <div className="products-page__header-actions">
-          <Badge variant="info">{products.length} item</Badge>
+          <Badge variant="primary">{products.length} item</Badge>
           <Button variant="primary" size="sm" onClick={openAdd} id="btn-add-product">
-            <Plus size={16} /> Tambah
+            <Plus size={16} style={{ marginRight: '6px' }} /> Tambah
           </Button>
         </div>
       </div>
@@ -118,8 +118,9 @@ export default function Products() {
       {products.length === 0 ? (
         <EmptyState
           title="Belum ada produk"
-          text="Tambahkan produk pertamamu untuk mulai mencatat transaksi."
-          action={<Button variant="primary" onClick={openAdd}><Plus size={16} /> Tambah Produk</Button>}
+          text="Tambahkan produk pertamamu untuk mulai mencatat transaksi dengan cepat."
+          icon={<Package size={40} />}
+          action={<Button variant="primary" onClick={openAdd}><Plus size={16} style={{ marginRight: '6px' }} /> Tambah Produk</Button>}
         />
       ) : (
         <div className="products-page__grid stagger-children">
@@ -128,7 +129,7 @@ export default function Products() {
               <div className="product-row__info">
                 <span className="product-row__name">{p.name}</span>
                 <div className="product-row__meta">
-                  <Badge variant="neutral">{p.category || '-'}</Badge>
+                  <Badge variant="info">{p.category || '-'}</Badge>
                   <span>Beli: {formatCurrency(p.base_price)}</span>
                   <span>Jual: {formatCurrency(p.sell_price)}</span>
                 </div>
@@ -136,7 +137,7 @@ export default function Products() {
               <div className="product-row__right">
                 <div className="product-row__stock">
                   <div className={`product-row__stock-value product-row__stock-value--${getStockClass(p)}`}>
-                    {p.current_stock} {p.unit}
+                    {p.current_stock} <span style={{ fontSize: '0.75rem', fontWeight: 400 }}>{p.unit}</span>
                   </div>
                   <div className="product-row__stock-label">
                     {p.current_stock <= 0 ? 'HABIS' : p.current_stock <= p.min_stock_threshold ? 'Stok rendah' : 'Stok aman'}
@@ -144,10 +145,10 @@ export default function Products() {
                 </div>
                 <div className="product-row__actions">
                   <button className="product-row__action-btn product-row__action-btn--edit" onClick={() => openEdit(p)} title="Edit">
-                    <Pencil size={14} />
+                    <Pencil size={16} />
                   </button>
                   <button className="product-row__action-btn product-row__action-btn--delete" onClick={() => setConfirmDelete(p)} title="Hapus">
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -163,7 +164,7 @@ export default function Products() {
         title={editingProduct ? '✏️ Edit Produk' : '➕ Tambah Produk Baru'}
         footer={
           <div className="products-modal__footer">
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
+            <Button variant="ghost" onClick={() => setShowModal(false)}>Batal</Button>
             <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving}>
               {editingProduct ? 'Simpan Perubahan' : 'Tambah Produk'}
             </Button>
@@ -199,14 +200,14 @@ export default function Products() {
         title="🗑️ Hapus Produk?"
         footer={
           <div className="products-modal__footer">
-            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>Batal</Button>
+            <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Batal</Button>
             <Button variant="danger" onClick={() => handleDelete(confirmDelete?.id)}>Ya, Hapus</Button>
           </div>
         }
       >
-        <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
           Yakin ingin menghapus <strong style={{ color: 'var(--text-primary)' }}>{confirmDelete?.name}</strong>?
-          Produk akan dihapus dari daftar (data transaksi lama tetap aman).
+          Produk akan dihapus dari daftar secara permanen.
         </p>
       </Modal>
     </div>

@@ -1,4 +1,3 @@
-import './InsightCard.css';
 import { formatRelativeTime } from '../../utils/formatters';
 import { AlertTriangle, TrendingDown, Package, DollarSign } from 'lucide-react';
 
@@ -15,21 +14,30 @@ export default function InsightCard({ insight, onDismiss, onMarkRead }) {
 
   return (
     <div
-      className={`insight-card ${!insight.isRead ? 'insight-card--unread' : ''}`}
       onClick={() => onMarkRead?.(insight.id)}
+      style={{
+        padding: '1rem',
+        backgroundColor: insight.isRead ? 'var(--bg-surface)' : 'var(--bg-surface-2)',
+        border: '1px solid var(--bg-border)',
+        borderLeft: insight.isRead ? '1px solid var(--bg-border)' : '3px solid var(--spark-cyan)',
+        borderRadius: 'var(--radius-md)',
+        cursor: 'pointer',
+        transition: 'all var(--duration-fast)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem'
+      }}
     >
-      <div className="insight-card__header">
-        <div className="insight-card__trigger">
-          <div className="insight-card__icon">
-            <Icon size={16} />
-          </div>
-          <span className="insight-card__type">{meta.label}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--spark-cyan)' }}>
+          <Icon size={16} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{meta.label}</span>
         </div>
-        <span className="insight-card__time">{formatRelativeTime(insight.createdAt)}</span>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatRelativeTime(insight.createdAt)}</span>
       </div>
-      <p className="insight-card__text">{insight.text}</p>
-      <div className="insight-card__actions">
-        <button className="insight-card__dismiss" onClick={(e) => { e.stopPropagation(); onDismiss?.(insight.id); }}>
+      <p style={{ fontSize: '0.9375rem', color: 'var(--text-primary)', margin: 0 }}>{insight.text}</p>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+        <button style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} onClick={(e) => { e.stopPropagation(); onDismiss?.(insight.id); }}>
           Tutup
         </button>
       </div>

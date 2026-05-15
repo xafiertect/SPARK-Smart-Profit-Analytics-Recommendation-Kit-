@@ -1,8 +1,6 @@
-import './Badge.css';
-
-export default function Badge({ children, variant = 'neutral', dot = false, className = '' }) {
+export default function Badge({ children, variant = 'info', className = '' }) {
   return (
-    <span className={`spark-badge spark-badge--${variant} ${dot ? 'spark-badge--dot' : ''} ${className}`}>
+    <span className={`badge badge-${variant} ${className}`}>
       {children}
     </span>
   );

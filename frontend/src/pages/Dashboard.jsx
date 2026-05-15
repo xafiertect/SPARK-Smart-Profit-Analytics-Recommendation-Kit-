@@ -43,7 +43,7 @@ export default function Dashboard() {
           trend={0}
           trendLabel=""
           variant="revenue"
-          icon={<Wallet size={18} />}
+          icon={<Wallet size={20} />}
         />
         <MetricCard
           label="Keuntungan Hari Ini"
@@ -51,7 +51,7 @@ export default function Dashboard() {
           trend={0}
           trendLabel=""
           variant="profit"
-          icon={<TrendingUp size={18} />}
+          icon={<TrendingUp size={20} />}
         />
         <MetricCard
           label="Pengeluaran Hari Ini"
@@ -59,17 +59,17 @@ export default function Dashboard() {
           trend={0}
           trendLabel=""
           variant="expense"
-          icon={<ShoppingCart size={18} />}
+          icon={<ShoppingCart size={20} />}
         />
       </div>
 
-      <section className="dashboard__section">
+      <section className="dashboard__section animate-slide-up" style={{ animationDelay: '100ms' }}>
         <div className="dashboard__section-header">
           <h2 className="dashboard__section-title">💡 AI Insights</h2>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {unreadCount > 0 && <span className="dashboard__section-count">{unreadCount} baru</span>}
             <Button variant="ghost" size="sm" onClick={triggerInsights} loading={insightsLoading}>
-              <RefreshCw size={14} /> Cek
+              <RefreshCw size={14} className={insightsLoading ? 'animate-spin' : ''} /> <span style={{ marginLeft: '6px' }}>Cek</span>
             </Button>
           </div>
         </div>
@@ -91,22 +91,18 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          <div style={{ padding: 'var(--space-md)', color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
-            Belum ada insight. Klik "Cek" untuk menjalankan analisis AI.
-          </div>
+          <EmptyState title="Belum ada insight" text="Klik 'Cek' untuk menjalankan analisis AI pada datamu." icon={<RefreshCw size={32} />} />
         )}
       </section>
 
-      <section className="dashboard__section">
+      <section className="dashboard__section animate-slide-up" style={{ animationDelay: '200ms' }}>
         <div className="dashboard__section-header">
           <h2 className="dashboard__section-title">Transaksi Terbaru</h2>
           <span className="dashboard__section-count">{transactions.length} total</span>
         </div>
         <div className="dashboard__transactions stagger-children">
           {transactions.length === 0 ? (
-            <div style={{ padding: 'var(--space-md)', color: 'var(--text-muted)', fontSize: 'var(--font-sm)' }}>
-              Belum ada transaksi. Mulai scan nota atau tambahkan manual.
-            </div>
+            <EmptyState title="Belum ada transaksi" text="Mulai scan nota atau tambahkan manual." icon={<ShoppingCart size={32} />} />
           ) : (
             transactions.slice(0, 6).map((txn) => (
               <div key={txn.id} className="txn-row" id={`txn-${txn.id}`}>
@@ -116,11 +112,11 @@ export default function Dashboard() {
                     {txn.items?.length > 1 && ` +${txn.items.length - 1} lainnya`}
                   </span>
                   <div className="txn-row__meta">
-                    <Badge variant={txn.transaction_type === 'sale' ? 'sale' : 'purchase'} dot>
+                    <Badge variant={txn.transaction_type === 'sale' ? 'success' : 'danger'} dot>
                       {txn.transaction_type === 'sale' ? 'Penjualan' : 'Pembelian'}
                     </Badge>
                     <span>{formatDate(txn.transaction_date)}</span>
-                    {txn.source === 'ocr' && <Badge variant="ai">OCR</Badge>}
+                    {txn.source === 'ocr' && <Badge variant="primary">AI OCR</Badge>}
                   </div>
                 </div>
                 <div className="txn-row__right">

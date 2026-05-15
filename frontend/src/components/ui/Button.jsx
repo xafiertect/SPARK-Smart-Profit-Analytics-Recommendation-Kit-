@@ -1,4 +1,4 @@
-import './Button.css';
+import { Loader2 } from 'lucide-react';
 
 export default function Button({
   children,
@@ -12,19 +12,14 @@ export default function Button({
   ...props
 }) {
   const classes = [
-    'spark-btn',
-    `spark-btn--${variant}`,
-    size !== 'md' && `spark-btn--${size}`,
-    fullWidth && 'spark-btn--full',
-    iconOnly && 'spark-btn--icon',
+    `btn-${variant}`,
+    fullWidth ? 'w-full' : '',
     className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  ].filter(Boolean).join(' ');
 
   return (
-    <button className={classes} disabled={disabled || loading} {...props}>
-      {loading && <span className="spark-btn__spinner" />}
+    <button className={classes} disabled={disabled || loading} style={fullWidth ? { width: '100%' } : {}} {...props}>
+      {loading && <Loader2 className="animate-spin" size={16} />}
       {children}
     </button>
   );

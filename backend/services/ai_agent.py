@@ -93,5 +93,29 @@ async def run_agent(user_id: UUID, db: AsyncSession) -> list[dict]:
             "insight_text": explanation,
         })
 
+    # Fallback: generate a positive summary when no triggers fire
+    if len(insights) == 0:
+        summary_data = {
+            "total_products": len(context.products),
+            "this_week_expense": context.this_week_expense,
+            "last_week_expense": context.last_week_expense,
+            "stock_levels": context.stock_levels,
+        }
+        explanation = await generate_explanation(
+            "SUMMARY", summary_data, ctx_dict
+        )
+        insight = AIInsight(
+            user_id=user_id,
+            trigger_type="SUMMARY",
+            trigger_data=summary_data,
+            insight_text=explanation,
+        )
+        db.add(insight)
+        insights.append({
+            "trigger_type": "SUMMARY",
+            "trigger_data": summary_data,
+            "insight_text": explanation,
+        })
+
     await db.commit()
     return insights

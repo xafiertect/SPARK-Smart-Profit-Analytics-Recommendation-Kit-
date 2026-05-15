@@ -1,23 +1,6 @@
-import './Card.css';
-
-export default function Card({
-  children,
-  variant,
-  interactive = false,
-  className = '',
-  ...props
-}) {
-  const classes = [
-    'spark-card',
-    variant && `spark-card--${variant}`,
-    interactive && 'spark-card--interactive',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
-
+export default function Card({ children, className = '', ...props }) {
   return (
-    <div className={classes} {...props}>
+    <div className={`card ${className}`} {...props}>
       {children}
     </div>
   );
