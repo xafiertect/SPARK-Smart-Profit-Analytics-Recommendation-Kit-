@@ -44,10 +44,28 @@ async def create_transaction(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    new_product_names = []
+    
     # Build items and calculate total
     items = []
     total = 0.0
     for item_data in data.items:
+        if getattr(item_data, "is_new_product", False):
+            from models.product import Product
+            new_stock = item_data.quantity if getattr(item_data, "add_new_stock", False) else 0
+            new_prod = Product(
+                user_id=current_user.id,
+                name=item_data.product_name,
+                category="⚠️ Perlu Verifikasi",
+                unit="pcs",
+                base_price=0,
+                sell_price=item_data.unit_price,
+                current_stock=new_stock,
+            )
+            db.add(new_prod)
+            new_product_names.append(item_data.product_name)
+            item_data.reduce_stock = False # Don't deduct it again
+
         subtotal = item_data.subtotal or (item_data.quantity * item_data.unit_price)
         items.append(TransactionItem(
             product_name=item_data.product_name,
@@ -72,10 +90,11 @@ async def create_transaction(
 
     # Update stock for each item
     for item_data in data.items:
-        await update_stock(
-            current_user.id, item_data.product_name,
-            item_data.quantity, data.transaction_type, db,
-        )
+        if item_data.reduce_stock is not False:
+            await update_stock(
+                current_user.id, item_data.product_name,
+                item_data.quantity, data.transaction_type, db,
+            )
 
     # RULE E-1 — Auto-create draft expense on purchase
     if data.transaction_type == "purchase":
@@ -110,6 +129,19 @@ async def create_transaction(
                 status="draft",
             )
             db.add(expense)
+
+    if new_product_names:
+        from models.notification import Notification
+        notif_msg = f"Produk {', '.join(new_product_names)} otomatis ditambahkan ke daftar stok. Harga beli dan stok minimal belum diatur. Silakan lengkapi data produk."
+        notif = Notification(
+            user_id=current_user.id,
+            type="NEW_PRODUCT_AUTO_REGISTER",
+            priority="INFO",
+            title="Produk Baru Didaftarkan dari Input Manual",
+            message=notif_msg,
+            action_data={"redirect": "/products"}
+        )
+        db.add(notif)
 
     await db.commit()
     await db.refresh(txn, ["items"])

@@ -2,6 +2,12 @@
 
 SPARK adalah asisten finansial otomatis untuk UMKM di Indonesia, dilengkapi dengan fitur OCR nota, analisis AI, dan pencatatan stok otomatis.
 
+### Tampilan Aplikasi
+<div style="display: flex; gap: 20px; align-items: flex-start;">
+  <img src="assets/desktop_demo.png" alt="Desktop Dashboard" width="600" />
+  <img src="assets/mobile_demo.png" alt="Mobile Dashboard" width="300" />
+</div>
+
 📚 **Dokumentasi Lengkap (SRS & Cara Kerja Detil)**:
 - [Frontend README](frontend/README.md)
 - [Backend README](backend/README.md)
@@ -26,11 +32,11 @@ Pastikan kamu sudah menginstal:
 ### Langkah 1: Clone Repository
 
 ```bash
-# Clone branch type2
-gh repo clone xafiertect/SPARK-Smart-Profit-Analytics-Recommendation-Kit- spark2 -- -b type2
+# Clone branch type12
+gh repo clone xafiertect/SPARK-Smart-Profit-Analytics-Recommendation-Kit- spark-app -- -b type12
 
 # Masuk ke folder project
-cd spark2
+cd spark-app
 ```
 
 ---

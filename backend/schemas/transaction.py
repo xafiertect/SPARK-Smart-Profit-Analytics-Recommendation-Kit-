@@ -10,6 +10,9 @@ class TransactionItemIn(BaseModel):
     quantity: float
     unit_price: float
     subtotal: float | None = None
+    reduce_stock: bool | None = True
+    is_new_product: bool | None = False
+    add_new_stock: bool | None = False
 
 
 class ParsedReceiptItem(BaseModel):

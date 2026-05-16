@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import ReceiptUploader from '../components/receipt/ReceiptUploader';
 import useTransactionStore from '../stores/transactionStore';
 import useUiStore from '../stores/uiStore';
+import Button from '../components/ui/Button';
+import { PenLine } from 'lucide-react';
 import './ScanReceipt.css';
 
 export default function ScanReceipt() {
@@ -55,7 +57,25 @@ export default function ScanReceipt() {
           {error}
         </div>
       )}
-      <ReceiptUploader onScan={handleScan} isScanning={scanStatus === 'scanning'} />
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <ReceiptUploader onScan={handleScan} isScanning={scanStatus === 'scanning'} />
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ height: '1px', background: 'var(--bg-elevated)', flex: 1 }}></div>
+          <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>ATAU</span>
+          <div style={{ height: '1px', background: 'var(--bg-elevated)', flex: 1 }}></div>
+        </div>
+
+        <Button 
+          variant="secondary" 
+          onClick={() => navigate('/income/manual')} 
+          style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+        >
+          <PenLine size={20} />
+          + Input Manual
+        </Button>
+      </div>
     </div>
   );
 }

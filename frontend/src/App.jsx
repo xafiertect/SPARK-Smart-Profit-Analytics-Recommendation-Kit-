@@ -12,6 +12,7 @@ import Expenses from './pages/Expenses';
 import SettingsPage from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ManualIncome from './pages/ManualIncome';
 import useAuthStore from './stores/authStore';
 
 function ProtectedRoute() {
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="/chat" element={<AiChat />} />
             <Route path="/products" element={<Products />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/income/manual" element={<ManualIncome />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>

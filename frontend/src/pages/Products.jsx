@@ -20,6 +20,9 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [expenseConfirmData, setExpenseConfirmData] = useState(null);
+  const [expenseMode, setExpenseMode] = useState(null); // 'draft' | 'confirmed'
+  const [expenseTotalActual, setExpenseTotalActual] = useState('');
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -50,8 +53,6 @@ export default function Products() {
     if (!form.sell_price || Number(form.sell_price) <= 0) { setError('Harga jual wajib diisi'); return; }
     if (!form.base_price || Number(form.base_price) <= 0) { setError('Harga beli wajib diisi'); return; }
 
-    setSaving(true);
-    setError(null);
     const payload = {
       name: form.name.trim(),
       category: form.category,
@@ -62,18 +63,46 @@ export default function Products() {
       min_stock_threshold: Number(form.min_stock_threshold) || 5,
     };
 
+    const oldStock = editingProduct ? Number(editingProduct.current_stock) || 0 : 0;
+    const diff = payload.current_stock - oldStock;
+
+    if (diff > 0) {
+      setExpenseConfirmData({ payload, diff, basePrice: payload.base_price });
+      setExpenseMode(null);
+      setExpenseTotalActual(String(diff * payload.base_price));
+      return;
+    }
+
+    await submitProduct(payload);
+  };
+
+  const submitProduct = async (payloadWithExpense) => {
+    setSaving(true);
+    setError(null);
     try {
       if (editingProduct) {
-        await updateProduct(editingProduct.id, payload);
+        await updateProduct(editingProduct.id, payloadWithExpense);
       } else {
-        await addProduct(payload);
+        await addProduct(payloadWithExpense);
       }
       setShowModal(false);
+      setExpenseConfirmData(null);
     } catch (e) {
       setError(e.message || 'Gagal menyimpan produk');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleExpenseSubmit = () => {
+    if (!expenseMode) return;
+    const { payload } = expenseConfirmData;
+    const finalPayload = {
+      ...payload,
+      expense_action: expenseMode,
+      expense_total_actual: expenseMode === 'confirmed' ? Number(expenseTotalActual) : undefined,
+    };
+    submitProduct(finalPayload);
   };
 
   const handleDelete = async (id) => {
@@ -210,6 +239,67 @@ export default function Products() {
           Produk akan dihapus dari daftar secara permanen.
         </p>
       </Modal>
+
+      {/* Expense Confirmation Modal */}
+      {expenseConfirmData && (
+        <Modal
+          isOpen={true}
+          onClose={() => setExpenseConfirmData(null)}
+          title="🛒 Konfirmasi Pengeluaran"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => {
+                // If cancelled, do we cancel the whole product save? 
+                // Let's assume yes, or we can save without expense. Let's provide "Lewati" option.
+                submitProduct({ ...expenseConfirmData.payload, expense_action: 'none' });
+              }}>Lewati (Tidak Dicatat)</Button>
+              <Button variant="primary" onClick={handleExpenseSubmit} disabled={!expenseMode || saving} loading={saving}>
+                Simpan & Lanjutkan
+              </Button>
+            </>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+              Anda menambah stok <strong style={{ color: 'var(--text-primary)' }}>{expenseConfirmData.payload.name}</strong> sebanyak <strong>{expenseConfirmData.diff} {expenseConfirmData.payload.unit}</strong>.
+              Total estimasi biaya adalah <strong style={{ color: 'var(--text-primary)' }}>{formatCurrency(expenseConfirmData.diff * expenseConfirmData.basePrice)}</strong>.
+              <br /><br />
+              Pilih bagaimana Anda ingin mencatat pengeluaran ini:
+            </p>
+
+            <div 
+              style={{ padding: '12px', border: `1px solid ${expenseMode === 'draft' ? 'var(--accent-cyan)' : 'var(--bg-elevated)'}`, borderRadius: '8px', cursor: 'pointer', background: expenseMode === 'draft' ? 'rgba(34, 211, 238, 0.05)' : 'var(--bg-surface)' }}
+              onClick={() => setExpenseMode('draft')}
+            >
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Simpan & Konfirmasi Nanti</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Akan tersimpan dengan status 'Menunggu Konfirmasi'. Anda akan diingatkan lewat notifikasi.</div>
+            </div>
+
+            <div 
+              style={{ padding: '12px', border: `1px solid ${expenseMode === 'confirmed' ? 'var(--accent-cyan)' : 'var(--bg-elevated)'}`, borderRadius: '8px', cursor: 'pointer', background: expenseMode === 'confirmed' ? 'rgba(34, 211, 238, 0.05)' : 'var(--bg-surface)' }}
+              onClick={() => setExpenseMode('confirmed')}
+            >
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Catat Langsung sebagai Pengeluaran</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Akan langsung masuk ke laporan keuangan Anda hari ini.</div>
+            </div>
+
+            {expenseMode === 'confirmed' && (
+              <div className="animate-fade-in" style={{ marginTop: '8px' }}>
+                <Input 
+                  label="Total Aktual (Rp)" 
+                  type="number" 
+                  value={expenseTotalActual} 
+                  onChange={(e) => setExpenseTotalActual(e.target.value)} 
+                  placeholder="Masukkan nominal asli"
+                />
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  *Anda bisa mengubah nominal ini jika ada biaya tambahan atau diskon.
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

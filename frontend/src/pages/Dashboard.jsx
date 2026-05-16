@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { TrendingUp, Wallet, ShoppingCart, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, Wallet, ShoppingCart, RefreshCw, PenLine } from 'lucide-react';
 import MetricCard from '../components/ui/MetricCard';
 import InsightCard from '../components/ui/InsightCard';
 import Badge from '../components/ui/Badge';
@@ -13,6 +14,7 @@ import DashboardChart from '../components/ui/DashboardChart';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const {
     insights, dailySummary, weeklySummary,
@@ -100,8 +102,13 @@ export default function Dashboard() {
 
       <section className="dashboard__section animate-slide-up" style={{ animationDelay: '200ms' }}>
         <div className="dashboard__section-header">
-          <h2 className="dashboard__section-title">Transaksi Terbaru</h2>
-          <span className="dashboard__section-count">{transactions.length} total</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 className="dashboard__section-title">Transaksi Terbaru</h2>
+            <span className="dashboard__section-count">{transactions.length} total</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/income/manual')}>
+            <PenLine size={14} style={{ marginRight: '6px' }} /> Tambah Manual
+          </Button>
         </div>
         <div className="dashboard__transactions stagger-children">
           {transactions.length === 0 ? (
@@ -119,7 +126,11 @@ export default function Dashboard() {
                       {txn.transaction_type === 'sale' ? 'Penjualan' : 'Pembelian'}
                     </Badge>
                     <span>{formatDate(txn.transaction_date)}</span>
-                    {txn.source === 'ocr' && <Badge variant="primary">AI OCR</Badge>}
+                    {txn.source === 'ocr' ? (
+                      <Badge variant="primary">AI OCR</Badge>
+                    ) : (
+                      <Badge variant="secondary">Manual</Badge>
+                    )}
                   </div>
                 </div>
                 <div className="txn-row__right">

@@ -12,6 +12,8 @@ class ProductCreateIn(BaseModel):
     sell_price: float
     current_stock: float = 0
     min_stock_threshold: float = 0
+    expense_action: str | None = None
+    expense_total_actual: float | None = None
 
 
 class ProductUpdateIn(BaseModel):
@@ -22,6 +24,8 @@ class ProductUpdateIn(BaseModel):
     sell_price: float | None = None
     current_stock: float | None = None
     min_stock_threshold: float | None = None
+    expense_action: str | None = None
+    expense_total_actual: float | None = None
 
 
 class ProductOut(BaseModel):
