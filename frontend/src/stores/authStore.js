@@ -10,6 +10,7 @@ const useAuthStore = create((set, get) => ({
   isOnboarded: false,
   isLoading: true, // true until initial auth check completes
   authError: null,
+  isLoggingOut: false,
 
   /**
    * Initialize: wire up the API client to read tokens from this store.
@@ -80,7 +81,11 @@ const useAuthStore = create((set, get) => ({
       isAuthenticated: false,
       isOnboarded: false,
       authError: null,
+      isLoggingOut: true,
     });
+    setTimeout(() => {
+      set({ isLoggingOut: false });
+    }, 50);
   },
 
   setOnboarded: (value) => {

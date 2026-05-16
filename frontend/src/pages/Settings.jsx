@@ -12,7 +12,7 @@ export default function SettingsPage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (

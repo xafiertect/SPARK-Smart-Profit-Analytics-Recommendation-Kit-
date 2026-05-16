@@ -167,8 +167,8 @@
   max-width: 900px;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, var(--glow-cyan);
+  border: 1px solid var(--bg-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2), var(--glow-cyan);
   background: var(--bg-surface);
   aspect-ratio: 16/9;
   display: flex;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Zap, ScanLine, MessageCircle, BarChart3, Package, TrendingUp, AlertTriangle, Lightbulb, CheckCircle2, ShieldCheck, Sun, Moon } from 'lucide-react';
 import Button from '../components/ui/Button';
+import DashboardMockup from '../components/ui/DashboardMockup';
 import './Landing.css';
 
 function ThemeToggle() {
@@ -92,10 +93,7 @@ export default function Landing() {
         </div>
 
         <div className="hero-mockup animate-slide-up" style={{ animationDelay: '0.3s' }}>
-          <div className="hero-mockup-placeholder">
-            <BarChart3 size={64} style={{ color: 'var(--spark-cyan)' }} />
-            <p>Dashboard Preview</p>
-          </div>
+          <DashboardMockup />
         </div>
       </header>
 

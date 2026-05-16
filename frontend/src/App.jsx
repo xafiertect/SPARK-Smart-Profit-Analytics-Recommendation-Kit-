@@ -17,6 +17,7 @@ import useAuthStore from './stores/authStore';
 function ProtectedRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const isLoggingOut = useAuthStore((s) => s.isLoggingOut);
   const location = useLocation();
 
   if (isLoading) {
@@ -36,6 +37,9 @@ function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
+    if (isLoggingOut) {
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
