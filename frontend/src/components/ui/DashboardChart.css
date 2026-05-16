@@ -1,0 +1,98 @@
+.dashboard-chart-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.dashboard-chart-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .dashboard-chart-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dashboard-chart-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dashboard-chart-toggles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dashboard-chart-toggle-btn {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--bg-border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+
+.dashboard-chart-toggle-btn:hover {
+  background: var(--bg-hover);
+}
+
+.dashboard-chart-toggle-btn.active {
+  background: var(--spark-cyan);
+  color: #000;
+  border-color: var(--spark-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.dashboard-chart-body {
+  height: 250px;
+  width: 100%;
+  position: relative;
+}
+
+.dashboard-chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: var(--radius-md);
+}
+
+.dashboard-chart-tooltip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.dashboard-chart-tooltip-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.dashboard-chart-tooltip-value {
+  font-size: 1rem;
+  font-weight: 700;
+}

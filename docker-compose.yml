@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: spark_db_type4
+    environment:
+      POSTGRES_USER: spark
+      POSTGRES_PASSWORD: spark_secret
+      POSTGRES_DB: spark_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - spark_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U spark -d spark_db" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  spark_pgdata:
