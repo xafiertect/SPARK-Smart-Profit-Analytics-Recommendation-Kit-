@@ -47,7 +47,7 @@ export default function AppShell() {
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case '/': return 'Dashboard';
+      case '/dashboard': return 'Dashboard';
       case '/products': return '📦 Produk';
       case '/expenses': return '💸 Pengeluaran';
       case '/chat': return '💬 AI Chat';
@@ -70,7 +70,7 @@ export default function AppShell() {
         </div>
 
         <nav className="sidebar__nav">
-          <NavLink to="/" end className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
+          <NavLink to="/dashboard" end className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
             <LayoutDashboard size={20} /> <span className="sidebar__label">Dashboard</span>
           </NavLink>
           <NavLink to="/products" className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>

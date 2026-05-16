@@ -10,7 +10,7 @@ export default function BottomNav() {
       <div className="bottom-nav-spacer" />
       <nav className="bottom-nav" id="bottom-navigation">
         <NavLink
-          to="/"
+          to="/dashboard"
           className={({ isActive }) => `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`}
           id="nav-dashboard"
         >

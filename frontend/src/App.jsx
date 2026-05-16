@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import ScanReceipt from './pages/ScanReceipt';
 import Validation from './pages/Validation';
@@ -16,6 +17,7 @@ import useAuthStore from './stores/authStore';
 function ProtectedRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -34,7 +36,7 @@ function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return <Outlet />;
@@ -43,9 +45,13 @@ function ProtectedRoute() {
 function GuestRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const location = useLocation();
 
   if (isLoading) return null;
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) {
+    const from = location.state?.from || '/dashboard';
+    return <Navigate to={from} replace />;
+  }
   return <Outlet />;
 }
 
@@ -59,8 +65,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Guest-only routes (login/register) */}
+        {/* Guest-only routes (login/register) and Landing Page */}
         <Route element={<GuestRoute />}>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
@@ -72,7 +79,7 @@ export default function App() {
 
           {/* Main app with shell */}
           <Route element={<AppShell />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/scan" element={<ScanReceipt />} />
             <Route path="/validation" element={<Validation />} />
             <Route path="/chat" element={<AiChat />} />

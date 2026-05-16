@@ -52,7 +52,7 @@ export default function Onboarding() {
         }
       }
       setOnboarded(true);
-      navigate('/');
+      navigate('/dashboard');
     } catch (e) {
       setError(e.message || 'Gagal menyimpan data');
     } finally {

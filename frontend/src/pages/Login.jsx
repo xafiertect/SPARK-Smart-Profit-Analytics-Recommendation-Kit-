@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Zap, Mail, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Zap, Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import Button from '../components/ui/Button';
 import useAuthStore from '../stores/authStore';
 
@@ -14,6 +14,7 @@ export default function Login() {
   const authError = useAuthStore((s) => s.authError);
   const clearError = useAuthStore((s) => s.clearError);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +22,8 @@ export default function Login() {
     const success = await login(email, password);
     setLoading(false);
     if (success) {
-      navigate('/');
+      const from = location.state?.from || '/dashboard';
+      navigate(from, { replace: true });
     } else {
       setShake(true);
       setTimeout(() => setShake(false), 500);
@@ -31,6 +33,11 @@ export default function Login() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-base)', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
       
+      {/* Back Button */}
+      <Link to="/" style={{ position: 'absolute', top: '24px', left: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', textDecoration: 'none', zIndex: 30, fontWeight: 500, fontSize: '0.875rem' }}>
+        <ArrowLeft size={18} /> Kembali ke Beranda
+      </Link>
+
       {/* Dynamic Background Particles */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.15, backgroundImage: 'radial-gradient(circle at center, var(--spark-cyan) 2px, transparent 2px)', backgroundSize: '60px 60px', animation: 'float 20s linear infinite', zIndex: 0 }} />
       <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0 }} />
