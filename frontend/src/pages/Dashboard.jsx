@@ -9,6 +9,7 @@ import useBusinessStore from '../stores/businessStore';
 import useTransactionStore from '../stores/transactionStore';
 import useAuthStore from '../stores/authStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import DashboardChart from '../components/ui/DashboardChart';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -46,14 +47,6 @@ export default function Dashboard() {
           icon={<Wallet size={20} />}
         />
         <MetricCard
-          label="Keuntungan Hari Ini"
-          value={dailySummary?.profit || 0}
-          trend={0}
-          trendLabel=""
-          variant="profit"
-          icon={<TrendingUp size={20} />}
-        />
-        <MetricCard
           label="Pengeluaran Hari Ini"
           value={dailySummary?.expense || 0}
           trend={0}
@@ -61,7 +54,17 @@ export default function Dashboard() {
           variant="expense"
           icon={<ShoppingCart size={20} />}
         />
+        <MetricCard
+          label="Profit Bersih"
+          value={dailySummary?.profit || 0}
+          trend={0}
+          trendLabel=""
+          variant="profit"
+          icon={<TrendingUp size={20} />}
+        />
       </div>
+
+      <DashboardChart />
 
       <section className="dashboard__section animate-slide-up" style={{ animationDelay: '100ms' }}>
         <div className="dashboard__section-header">

@@ -11,6 +11,8 @@ const useBusinessStore = create((set, get) => ({
   productsLoading: false,
   insightsLoading: false,
   summaryLoading: false,
+  chartData: [],
+  chartDataLoading: false,
   error: null,
 
   // ── Products ──────────────────────────────────────────
@@ -105,6 +107,17 @@ const useBusinessStore = create((set, get) => ({
       });
     } catch (e) {
       set({ error: e.message, summaryLoading: false });
+    }
+  },
+
+  fetchChartData: async (period = '7d') => {
+    set({ chartDataLoading: true });
+    try {
+      const { getChart } = await import('../api/dashboard');
+      const data = await getChart(period);
+      set({ chartData: data || [], chartDataLoading: false });
+    } catch (e) {
+      set({ error: e.message, chartDataLoading: false });
     }
   },
 

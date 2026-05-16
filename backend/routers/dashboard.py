@@ -25,3 +25,15 @@ async def get_summary(
         "today": daily,
         "week": weekly,
     }
+
+@router.get("/chart")
+async def get_chart(
+    period: str = "7d",
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from services.financial_engine import calculate_chart_data
+    if period not in ["1d", "7d", "1m", "1y"]:
+        period = "7d"
+    data = await calculate_chart_data(current_user.id, period, db)
+    return data

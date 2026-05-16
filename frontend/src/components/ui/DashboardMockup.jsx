@@ -42,7 +42,7 @@ export default function DashboardMockup() {
           </div>
         </div>
 
-        {/* 4 Cards */}
+        {/* 3 Cards */}
         <div className="mockup-cards">
           <div className="mockup-card">
             <span className="mockup-card-title">Pendapatan Hari Ini</span>
@@ -56,18 +56,22 @@ export default function DashboardMockup() {
             <span className="mockup-card-title">Profit Bersih</span>
             <span className="mockup-card-value" style={{ color: 'var(--color-success)' }}>Rp 820.000</span>
           </div>
-          <div className="mockup-card">
-            <span className="mockup-card-title">Stok Menipis</span>
-            <span className="mockup-card-value danger">3 Produk</span>
-          </div>
         </div>
 
         <div className="mockup-bottom-grid">
           {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Chart */}
-            <div className="mockup-panel" style={{ height: '140px' }}>
-              <h3 className="mockup-panel-title">Pendapatan 7 Hari Terakhir</h3>
+            <div className="mockup-panel" style={{ height: '180px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h3 className="mockup-panel-title">Pendapatan 7 Hari</h3>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <span style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: '10px', background: 'var(--bg-surface-2)', color: 'var(--text-muted)' }}>1H</span>
+                  <span style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: '10px', background: 'var(--spark-cyan)', color: '#000', fontWeight: 'bold' }}>7H</span>
+                  <span style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: '10px', background: 'var(--bg-surface-2)', color: 'var(--text-muted)' }}>1B</span>
+                  <span style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: '10px', background: 'var(--bg-surface-2)', color: 'var(--text-muted)' }}>1T</span>
+                </div>
+              </div>
               <div className="mockup-chart">
                 <div className="mockup-bar" style={{ height: '40%' }}></div>
                 <div className="mockup-bar" style={{ height: '60%' }}></div>
